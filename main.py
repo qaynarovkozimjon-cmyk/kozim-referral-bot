@@ -68,11 +68,13 @@ async def start(message: Message):
     if referrer == message.from_user.id:
         referrer = None
 
-    await add_user(
-        message.from_user.id,
-        message.from_user.username,
-        referrer
-    )
+   added = await add_user(
+    message.from_user.id,
+    message.from_user.username,
+    referrer
+)
+
+print(f"Added: {added}, Referrer: {referrer}")
 
     bot_username = (await bot.get_me()).username
 
