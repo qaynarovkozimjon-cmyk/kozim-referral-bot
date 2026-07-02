@@ -76,3 +76,11 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+async def get_referrals(user_id):
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.execute(
+            "SELECT referrals FROM users WHERE user_id=?",
+            (user_id,)
+        )
+        row = await cursor.fetchone()
+        return row[0] if row else 0
