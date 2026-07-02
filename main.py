@@ -1,4 +1,3 @@
-from database import create_db, add_user, get_referrals
 @dp.message(CommandStart())
 async def start(message: Message):
     args = message.text.split()
@@ -22,10 +21,10 @@ async def start(message: Message):
     bot_username = (await bot.get_me()).username
     link = f"https://t.me/{bot_username}?start={message.from_user.id}"
 
-    await message.answercount = await get_referrals(message.from_user.id)
+    count = await get_referrals(message.from_user.id)
 
-await message.answer(
-    f"🎉 Xush kelibsiz!\n\n"
-    f"👥 Referallaringiz: {count}\n\n"
-    f"🔗 Sizning havolangiz:\n{link}"
-)
+    await message.answer(
+        f"🎉 Xush kelibsiz!\n\n"
+        f"👥 Referallaringiz: {count}\n\n"
+        f"🔗 Sizning havolangiz:\n{link}"
+    )
