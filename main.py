@@ -1,21 +1,64 @@
-from aiogram import Bot, Dispatcher
-from aiogram.filters import CommandStart
-from aiogram.types import Message
 import asyncio
 import os
+
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import CommandStart
+from aiogram.types import (
+    Message,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    CallbackQuery,
+)
+from aiogram.exceptions import TelegramBadRequest
 
 from database import create_db, add_user, get_referrals
 
 TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_USERNAME = "@Matematika_Kozim" 
 
 bot = Bot(TOKEN)
 dp = Dispatcher()
+
+
+async def check_subscription(user_id):
+    try:
+        member = await bot.get_chat_member(CHANNEL_USERNAME, user_id)
+        return member.status in ["member", "administrator", "creator"]
+    except TelegramBadRequest:
+        return False
+
 
 @dp.message(CommandStart())
 async def start(message: Message):
     args = message.text.split()
 
+    # Kanalga obuna tekshirish
+    if not await check_subscription(message.from_user.id):
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="📢 Kanalga qo'shilish",
+                        url=f"https://t.me/{CHANNEL_USERNAME.replace('@','')}"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="✅ Tekshirish",
+                        callback_data="check_sub"
+                    )
+                ]
+            ]
+        )
+
+        await message.answer(
+            "❗️Botdan foydalanish uchun avval kanalga a'zo bo'ling.",
+            reply_markup=keyboard
+        )
+        return
+
     referrer = None
+
     if len(args) > 1:
         try:
             referrer = int(args[1])
@@ -32,6 +75,7 @@ async def start(message: Message):
     )
 
     bot_username = (await bot.get_me()).username
+
     link = f"https://t.me/{bot_username}?start={message.from_user.id}"
 
     count = await get_referrals(message.from_user.id)
@@ -42,9 +86,24 @@ async def start(message: Message):
         f"🔗 Sizning referal havolangiz:\n{link}"
     )
 
+
+@dp.callback_query(F.data == "check_sub")
+async def check_sub(callback: CallbackQuery):
+    if await check_subscription(callback.from_user.id):
+        await callback.message.edit_text(
+            "✅ Rahmat! Endi /start ni yuboring."
+        )
+    else:
+        await callback.answer(
+            "❌ Siz hali kanalga a'zo emassiz.",
+            show_alert=True
+        )
+
+
 async def main():
     await create_db()
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
