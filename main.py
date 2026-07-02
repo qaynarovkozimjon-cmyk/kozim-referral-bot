@@ -1,3 +1,4 @@
+from database import create_db, add_user, get_referrals
 @dp.message(CommandStart())
 async def start(message: Message):
     args = message.text.split()
