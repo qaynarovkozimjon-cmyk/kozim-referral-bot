@@ -39,43 +39,6 @@ async def add_user(user_id, username, referrer=None):
         await db.commit()
         return True
 
-Keyin main.py ni quyidagicha o'zgartir:
-
-from aiogram import Bot, Dispatcher
-from aiogram.filters import CommandStart
-from aiogram.types import Message
-import asyncio
-import os
-
-from database import create_db, add_user
-
-TOKEN = os.getenv("BOT_TOKEN")
-
-bot = Bot(TOKEN)
-dp = Dispatcher()
-
-@dp.message(CommandStart())
-async def start(message: Message):
-    await add_user(
-        message.from_user.id,
-        message.from_user.username
-    )
-
-    bot_username = (await bot.get_me()).username
-
-    link = f"https://t.me/{bot_username}?start={message.from_user.id}"
-
-    await message.answer(
-        f"Salom!\n\n"
-        f"Sizning referal havolangiz:\n{link}"
-    )
-
-async def main():
-    await create_db()
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    asyncio.run(main())
 async def get_referrals(user_id):
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.execute(
